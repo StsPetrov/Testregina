@@ -727,7 +727,17 @@ if (!empty($book_data['chapters'])) {
         'parsed_chapters' => $tp, 'last_parsed_at' => current_time('mysql'), 'error_msg' => null,
     ], ['slug' => $book->slug]);
     
-    abs_parser_ifreedom_sync_chapter_number($post_id, $book->slug);
+    $tp = $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$wpdb->posts} p 
+     JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_chapter_number' 
+     WHERE p.post_parent = %d AND p.post_type = 'chapter'", $post_id
+));
+$wpdb->update($table, [
+    'status' => ($tp >= $book->chapters_count) ? 'done' : 'new',
+    'parsed_chapters' => $tp,
+    'last_parsed_at' => current_time('mysql'),
+    'error_msg' => null,
+], ['slug' => $book->slug]);
     delete_option('abs_parser_ifreedom_manual_state');
     $pc++;
     wp_send_json_success([
