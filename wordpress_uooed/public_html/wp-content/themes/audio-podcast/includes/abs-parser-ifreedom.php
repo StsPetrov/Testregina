@@ -570,20 +570,7 @@ function abs_parser_ifreedom_download_cover($post_id, $cover_url) {
 // ============================================================
 // 11. ЛОГИРОВАНИЕ
 // ============================================================
-function abs_parser_ifreedom_sync_chapter_number($post_id, $slug) {
-    global $wpdb;
-    $last = $wpdb->get_row($wpdb->prepare("SELECT p.post_title, pm.meta_value as num FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_chapter_number' WHERE p.post_parent = %d AND p.post_type = 'chapter' ORDER BY CAST(pm.meta_value AS UNSIGNED) DESC LIMIT 1", $post_id));
-    if (!$last) return;
-    $bd = abs_parser_ifreedom_parse_book_page($slug);
-    if (isset($bd['error']) || empty($bd['chapters'])) return;
-    $site_last = end($bd['chapters']);
-    if (mb_strtolower(trim($last->post_title)) === mb_strtolower(trim($site_last['title']))) {
-        $real = count($bd['chapters']);
-        $wpdb->update($wpdb->prefix.'abs_parser_ifreedom_queue', ['chapters_count' => $real, 'parsed_chapters' => $real, 'status' => 'done'], ['slug' => $slug]);
-    } else {
-        $wpdb->update($wpdb->prefix.'abs_parser_ifreedom_queue', ['status' => 'error', 'error_msg' => 'Заголовки не совпадают'], ['slug' => $slug]);
-    }
-}
+
 
 function abs_parser_ifreedom_log($msg) {
     $log_file = get_template_directory() . '/parser-ifreedom.log';
