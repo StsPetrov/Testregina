@@ -195,7 +195,7 @@ while (have_posts()) : the_post();
             <div class="chapter-list-scroll" id="chapter-list-scroll">
                 <?php foreach ($all_chapters_data as $ch): 
                     $is_current = ($ch['number'] == $chapter_num);
-                    $chapter_label = $ch['title'] ?: "Глава {$ch['number']}";
+                    $chapter_label = $ch['title'] ?: "{$ch['number']}";
                     ?>
                     <a href="<?php echo esc_url($ch['url']); ?>" 
                        class="chapter-list-item <?php echo $is_current ? 'current' : ''; ?>"
@@ -223,14 +223,12 @@ while (have_posts()) : the_post();
             <!-- Заголовок главы -->
             <h1 class="chapter-reader-title">
                 <?php 
-                if ($volume && $chapter_num) {
-                    echo "Том {$volume} • Глава {$chapter_num}";
-                } elseif ($chapter_num) {
-                    echo "Глава {$chapter_num}";
+                if ($volume) {
+                    echo "Том {$volume} • ";
                 }
                 $chapter_title = get_the_title();
                 if ($chapter_title && $chapter_title != $ranobe_title) {
-                    echo ' — ' . esc_html($chapter_title);
+                    echo esc_html($chapter_title);
                 }
                 ?>
             </h1>
