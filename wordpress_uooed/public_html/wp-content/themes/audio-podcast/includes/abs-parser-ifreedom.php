@@ -576,3 +576,4 @@ function abs_parser_ifreedom_log($msg) {
     $log_file = get_template_directory() . '/parser-ifreedom.log';
     file_put_contents($log_file, date('Y-m-d H:i:s') . ' ' . $msg . "\n", FILE_APPEND);
 }
+

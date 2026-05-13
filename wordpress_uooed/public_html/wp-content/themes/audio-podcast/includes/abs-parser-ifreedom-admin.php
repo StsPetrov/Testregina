@@ -658,6 +658,7 @@ function abs_parser_ifreedom_parse_book_ajax() {
     }
     
     $wpdb->update($table, ['status' => 'error', 'error_msg' => $book_data['error']], ['slug' => $book->slug]);
+    abs_telegram_log("❌ AJAX: {$book->title} — {$book_data['error']}");
     wp_send_json_success([
         'finished' => false, 'processed' => $pc, 'total' => $total,
         'next_index' => $ci, 'current_book' => $book->title,
@@ -678,6 +679,7 @@ function abs_parser_ifreedom_parse_book_ajax() {
     $save = abs_parser_ifreedom_save_ranobe_post($book_data);
     if ($save['status'] === 'error') {
         $wpdb->update($table, ['status' => 'error', 'error_msg' => $save['message']], ['slug' => $book->slug]);
+        abs_telegram_log("❌ AJAX: {$book_data['title']} — {$save['message']}");
         wp_send_json_success([
             'finished' => false, 'processed' => $pc, 'total' => $total,
             'next_index' => $ci + 1, 'current_book' => $book_data['title'],
@@ -753,6 +755,7 @@ $wpdb->update($table, [
 ], ['slug' => $book->slug]);
     delete_option('abs_parser_ifreedom_manual_state');
     $pc++;
+     abs_telegram_log("✅ AJAX: {$book_data['title']} — {$tp} глав");
     wp_send_json_success([
         'finished' => ($ci + 1 >= $total), 'processed' => $pc, 'total' => $total,
         'next_index' => $ci + 1, 'current_book' => $book_data['title'],
@@ -826,6 +829,7 @@ if ($next->chapters_count == 0 && isset($bd['chapters_free_count'])) {
         if (is_array($bd) && isset($bd['error'])) {
             $wpdb->update($table, ['status' => 'error', 'error_msg' => $bd['error']], ['slug' => $next->slug]);
             $state['log'][] = date('H:i:s') . ' ❌ ' . $next->title;
+            abs_telegram_log("❌ Ошибка: {$next->title}");
             update_option($ok, $state);
             return;
         }
@@ -856,6 +860,7 @@ if ($next->chapters_count == 0 && isset($bd['chapters_free_count'])) {
         ];
         if (!empty($only_slugs)) $state['only_slugs'] = $only_slugs;
         update_option($ok, $state);
+                abs_telegram_log("🔄 Старт: {$bd['title']} (" . count($bd['chapters'] ?? []) . " глав)");
     }
     
     if ($state['running'] && $state['slug'] && !empty($state['chapters'])) {
@@ -915,6 +920,7 @@ if ($next->chapters_count == 0 && isset($bd['chapters_free_count'])) {
                 'error_msg' => null,
             ], ['slug' => $state['slug']]);
             $state['log'][] = date('H:i:s') . ' ✅ ' . $state['title'] . ' — ' . $loaded_chapters . ' глав';
+            abs_telegram_log("✅ Готово: {$state['title']} — {$loaded_chapters} глав");
             $state['running'] = false;
             $state['slug'] = null;
         }
@@ -970,3 +976,20 @@ function abs_parser_ifreedom_test() {
     echo '<pre>Settings OK: '; print_r($s); echo '</pre>';
 }
 add_action('admin_footer', 'abs_parser_ifreedom_test');
+
+// Telegram-логгер
+function abs_telegram_log($message) {
+    $token = '8671403451:AAEjEAjv-Nb3aKC22C6QTOa5w0kBJMDJNtY';
+    $chat_id = '3607488';
+    
+    $url = "https://api.telegram.org/bot{$token}/sendMessage";
+    wp_remote_post($url, [
+        'body' => json_encode([
+            'chat_id' => $chat_id,
+            'text' => '📚 ' . $message,
+            'parse_mode' => 'HTML'
+        ]),
+        'headers' => ['Content-Type' => 'application/json'],
+        'timeout' => 10
+    ]);
+}
