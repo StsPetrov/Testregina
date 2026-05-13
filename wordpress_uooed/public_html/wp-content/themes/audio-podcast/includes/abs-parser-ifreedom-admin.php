@@ -641,7 +641,9 @@ function abs_parser_ifreedom_parse_book_ajax() {
     
     $book = $queue[$ci];
     $wpdb->update($table, ['status' => 'parsing'], ['slug' => $book->slug]);
+    if (empty($_POST['start_chapter']) || $_POST['start_chapter'] <= 1) {
     abs_telegram_log("🔄 AJAX старт: {$book->title}");
+}
     
     $book_data = abs_parser_ifreedom_parse_book_page($book->slug);
  if (is_array($book_data) && isset($book_data['error'])) {
