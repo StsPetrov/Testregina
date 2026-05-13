@@ -894,40 +894,29 @@ if ($next->chapters_count == 0 && isset($bd['chapters_free_count'])) {
         }
         
         $state['start_chapter'] = $be;
-        $stuck = $loaded > 0 ? 0 : (($state['stuck_cycles'] ?? 0) + 1);
-        $state['stuck_cycles'] = $stuck;
-        $state['log'][] = date('H:i:s') . ' 📖 ' . $state['title'] . ' — ' . $be . '/' . $state['total_chapters'] . ' (' . $loaded . ')' . ($stuck > 0 ? ' [зависание: ' . $stuck . ']' : '');
+        $loaded_chapters = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID=pm.post_id AND pm.meta_key='_chapter_number' WHERE p.post_parent=%d AND p.post_type='chapter'",
+            $state['post_id']
+        ));
+        $wpdb->update($table, [
+            'parsed_chapters' => $loaded_chapters,
+            'last_parsed_at' => current_time('mysql'),
+        ], ['slug' => $state['slug']]);
         
-        if ($stuck >= 10) {
-            $tp = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID=pm.post_id AND pm.meta_key='_chapter_number' WHERE p.post_parent=%d AND p.post_type='chapter'",
-                $state['post_id']
-            ));
-            $wpdb->update($table, [
-                'status' => 'error', 'error_msg' => 'Недоступные главы на источнике',
-                'parsed_chapters' => $tp, 'last_parsed_at' => current_time('mysql'),
-            ], ['slug' => $state['slug']]);
-            $state['log'][] = date('H:i:s') . ' ⚠️ ' . $state['title'] . ' — пропущена (' . $stuck . ' циклов без загрузки)';
-            $state['running'] = false; $state['slug'] = null;
-            update_option($ok, $state);
-            return;
-        }
+        $state['log'][] = date('H:i:s') . ' 📖 ' . $state['title'] . ' — ' . $be . '/' . $state['total_chapters'];
         
         if (count($state['log']) > 50) $state['log'] = array_slice($state['log'], -50);
         
         if ($be >= $state['total_chapters']) {
-            abs_parser_ifreedom_sync_chapter_number($state['post_id'], $state['slug']);
-            $tp = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->posts} p JOIN {$wpdb->postmeta} pm ON p.ID=pm.post_id AND pm.meta_key='_chapter_number' WHERE p.post_parent=%d AND p.post_type='chapter'",
-                $state['post_id']
-            ));
-            $bi = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE slug=%s", $state['slug']));
             $wpdb->update($table, [
-                'status' => ($tp >= ($bi->chapters_count ?? 0)) ? 'done' : 'new',
-                'parsed_chapters' => $tp, 'last_parsed_at' => current_time('mysql'),
+                'status' => ($loaded_chapters >= $state['total_chapters']) ? 'done' : 'new',
+                'parsed_chapters' => $loaded_chapters,
+                'last_parsed_at' => current_time('mysql'),
+                'error_msg' => null,
             ], ['slug' => $state['slug']]);
-            $state['log'][] = date('H:i:s') . ' ✅ ' . $state['title'] . ' — ' . $tp . ' глав';
-            $state['running'] = false; $state['slug'] = null;
+            $state['log'][] = date('H:i:s') . ' ✅ ' . $state['title'] . ' — ' . $loaded_chapters . ' глав';
+            $state['running'] = false;
+            $state['slug'] = null;
         }
         update_option($ok, $state);
     }
