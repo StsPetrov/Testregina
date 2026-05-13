@@ -100,7 +100,7 @@ function abs_parser_ifreedom_get_html($url, $attempt = 0) {
     $settings = abs_parser_ifreedom_get_settings();
 
     $args = [
-        'timeout'    => (int) $settings['http_timeout'],
+        'timeout' => 15, // 15 секунд, не больше
         'user-agent' => $ua,
         'headers'    => [
             'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',

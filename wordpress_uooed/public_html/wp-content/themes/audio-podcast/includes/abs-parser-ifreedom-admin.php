@@ -482,9 +482,9 @@ function scanPage(page, lastPage, total, errors) {
                     }
                 }
             }).fail(function() {
-                log('❌ Ошибка AJAX', 'error');
-                setButtons(true);
-            });
+    log('⚠️ Ошибка AJAX, перехожу к следующей книге', 'warning');
+    processNextBook(slugs, index + 1, processed);
+})
         }
         
         // Очистить очередь
@@ -643,15 +643,28 @@ function abs_parser_ifreedom_parse_book_ajax() {
     $wpdb->update($table, ['status' => 'parsing'], ['slug' => $book->slug]);
     
     $book_data = abs_parser_ifreedom_parse_book_page($book->slug);
-    if (is_array($book_data) && isset($book_data['error'])) {
-        $wpdb->update($table, ['status' => 'error', 'error_msg' => $book_data['error']], ['slug' => $book->slug]);
+ if (is_array($book_data) && isset($book_data['error'])) {
+    $error_count = ($_POST['error_count'] ?? 0) + 1;
+    
+    if ($error_count >= 3) {
+        // Пропускаем книгу после 3 попыток
+        $wpdb->update($table, ['status' => 'error', 'error_msg' => 'Пропущена после 3 ошибок'], ['slug' => $book->slug]);
         wp_send_json_success([
-            'finished' => false, 'processed' => $pc, 'total' => $total,
+            'finished' => ($ci + 1 >= $total), 'processed' => $pc, 'total' => $total,
             'next_index' => $ci + 1, 'current_book' => $book->title,
-            'error_count' => $error_count + 1,
-            'log' => "❌ {$book_data['error']}", 'log_type' => 'error',
+            'error_count' => 0,
+            'log' => "⏭ Пропущена после 3 ошибок: {$book->title}", 'log_type' => 'warning',
         ]);
     }
+    
+    $wpdb->update($table, ['status' => 'error', 'error_msg' => $book_data['error']], ['slug' => $book->slug]);
+    wp_send_json_success([
+        'finished' => false, 'processed' => $pc, 'total' => $total,
+        'next_index' => $ci, 'current_book' => $book->title,
+        'error_count' => $error_count,
+        'log' => "❌ {$book_data['error']}", 'log_type' => 'error',
+    ]);
+}
     
     $book_data['url'] = $book->url;
     if ($book->chapters_count == 0 && isset($book_data['chapters_free_count'])) {
