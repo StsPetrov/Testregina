@@ -106,6 +106,7 @@ while (have_posts()) : the_post();
         ));
     }
     ?>
+    
 
     <!-- ПАНЕЛЬ ЧИТАЛКИ (sticky) -->
     <div class="chapter-reader-toolbar" id="reader-toolbar">
