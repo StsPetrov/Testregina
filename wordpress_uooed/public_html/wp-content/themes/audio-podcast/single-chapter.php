@@ -77,29 +77,34 @@ while (have_posts()) : the_post();
         }
     }
 
-    // Определяем порядок сортировки
-$source = get_post_meta($ranobe_id, '_ranobe_source', true);
-$order = ($source === 'ifreedom') ? 'DESC' : 'ASC';
+        // Определяем источник
+    $source = get_post_meta($ranobe_id, '_ranobe_source', true);
 
-// Получаем все главы в порядке отображения
-$all_chapters_ids = get_posts(array(
-    'post_type' => 'chapter',
-    'post_parent' => $ranobe_id,
-    'posts_per_page' => -1,
-    'orderby' => 'meta_value_num',
-    'meta_key' => '_chapter_number',
-    'order' => $order,
-    'fields' => 'ids',
-));
-
-// Находим текущую позицию
-$current_pos = array_search(get_the_ID(), $all_chapters_ids);
-
-// Предыдущая глава
-$prev_chapter = ($current_pos > 0) ? get_post($all_chapters_ids[$current_pos - 1]) : null;
-
-// Следующая глава
-$next_chapter = ($current_pos < count($all_chapters_ids) - 1) ? get_post($all_chapters_ids[$current_pos + 1]) : null;
+    if ($source === 'ifreedom') {
+        // Для ifreedom — главы в обратном порядке (DESC)
+        $prev_chapter = get_posts(array(
+            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
+            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'ASC',
+            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '>', 'type' => 'NUMERIC'))
+        ));
+        $next_chapter = get_posts(array(
+            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
+            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'DESC',
+            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '<', 'type' => 'NUMERIC'))
+        ));
+    } else {
+        // Стандартный порядок (ASC)
+        $prev_chapter = get_posts(array(
+            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
+            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'DESC',
+            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '<', 'type' => 'NUMERIC'))
+        ));
+        $next_chapter = get_posts(array(
+            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
+            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'ASC',
+            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '>', 'type' => 'NUMERIC'))
+        ));
+    }
     ?>
 
     <!-- ПАНЕЛЬ ЧИТАЛКИ (sticky) -->
