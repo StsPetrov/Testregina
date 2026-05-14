@@ -141,10 +141,10 @@ $chapters = get_posts(array(
                             <?php if ($audio_page_url): ?>
                                 <a href="<?php echo esc_url($audio_page_url); ?>" style="padding:14px 28px; color:rgba(255,255,255,0.7); text-decoration:none; font-size:1.1rem; font-weight:600;">🎧 Слушать</a>
                             <?php else: ?>
-                                <a href="/заказать-озвучку-книги" style="padding:14px 28px; color:#E94E35; text-decoration:none; font-size:1.1rem; font-weight:600;">🎙️ Заказать озвучку</a>
+                               
                             <?php endif; ?>
                         </div>
-                        
+                        <?php echo do_shortcode('[abs_order_voice]'); ?>
                         <!-- Список глав -->
                         <div style="text-align:center;margin:10px 0;">
     <a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#ff9800,#ff5722);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;font-size:1rem;margin-top: 10px;">💰 Поддержать проект</a>

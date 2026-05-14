@@ -3802,95 +3802,6 @@ function abs_noindex_service_pages() {
     }
 }
 
-// ========== ТЕСТОВЫЙ ПЛАТЁЖ T-BANK ==========
-
-// Инициирование платежа
-add_action('wp_ajax_tbank_init_payment', 'abs_tbank_init_payment');
-add_action('wp_ajax_nopriv_tbank_init_payment', 'abs_tbank_init_payment');
-
-function abs_tbank_init_payment() {
-    $terminal_key = '1778777475774';
-    $password = '*$&xe&4M671pfCEy';
-    
-    $amount = intval($_POST['amount'] ?? 100);
-    $order_id = sanitize_text_field($_POST['order_id'] ?? 'test_' . time());
-    $description = sanitize_text_field($_POST['description'] ?? 'Тестовый платёж');
-    
-    // Алфавитный порядок: Amount + Description + OrderId + Password + TerminalKey
-    $token_string = $amount . $description . $order_id . $password . $terminal_key;
-    $token = hash('sha256', $token_string);
-    
-    $request_data = [
-        'TerminalKey' => $terminal_key,
-        'Amount' => $amount,
-        'OrderId' => $order_id,
-        'Description' => $description,
-        'Token' => $token,
-    ];
-    
-    $response = wp_remote_post('https://securepay.tinkoff.ru/v2/Init', [
-        'headers' => ['Content-Type' => 'application/json'],
-        'body' => json_encode($request_data),
-        'timeout' => 30,
-    ]);
-    
-    if (is_wp_error($response)) {
-        wp_send_json_error($response->get_error_message());
-    }
-    
-    $body = json_decode(wp_remote_retrieve_body($response), true);
-    
-    if (!empty($body['PaymentURL'])) {
-        wp_send_json_success(['payment_url' => $body['PaymentURL']]);
-    } else {
-        wp_send_json_error($body['Details'] ?? $body['Message'] ?? 'Неизвестная ошибка');
-    }
-}
-
-// Шорткод
-add_shortcode('abs_test_payment', function() {
-    ob_start();
-    ?>
-    <div style="max-width:500px;margin:50px auto;background:rgba(26,26,46,0.9);border-radius:20px;padding:30px;border:1px solid rgba(13,202,240,0.2);text-align:center;">
-        <h2 style="color:#0dcaf0;margin-bottom:20px;">🧪 Тестовый платёж T‑Bank</h2>
-        <p style="color:#fff;margin-bottom:10px;">Сумма: <strong style="color:#0dcaf0;">1 ₽</strong></p>
-        <button id="tbank-pay-btn" style="background:linear-gradient(90deg,#0dcaf0,#5bc0de);border:none;border-radius:40px;padding:14px 40px;color:#1b2039;font-weight:700;font-size:1.1rem;cursor:pointer;">💳 Оплатить 1 ₽</button>
-        <div id="tbank-msg" style="margin-top:15px;"></div>
-    </div>
-
-    <script>
-    document.getElementById('tbank-pay-btn').addEventListener('click', function() {
-        this.textContent = 'Загрузка...';
-        this.disabled = true;
-        
-        var formData = new FormData();
-        formData.append('action', 'tbank_init_payment');
-        formData.append('amount', '100');
-        formData.append('order_id', 'test_' + Date.now());
-        formData.append('description', 'Тестовый платёж 1₽');
-        
-        fetch('<?php echo admin_url("admin-ajax.php"); ?>', {method:'POST', body: formData})
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.success && d.data && d.data.payment_url) {
-                window.location.href = d.data.payment_url;
-            } else {
-                document.getElementById('tbank-msg').innerHTML = '<p style="color:#ff5555;">❌ ' + (d.data || 'Ошибка') + '</p>';
-                this.textContent = '💳 Оплатить 1 ₽';
-                this.disabled = false;
-            }
-        }.bind(this))
-        .catch(function(e) {
-            document.getElementById('tbank-msg').innerHTML = '<p style="color:#ff5555;">❌ Ошибка: ' + e.message + '</p>';
-            this.textContent = '💳 Оплатить 1 ₽';
-            this.disabled = false;
-        }.bind(this));
-    });
-    </script>
-    <?php
-    return ob_get_clean();
-});
-
 
 add_action('wp_footer', function() {
     ?>
@@ -3930,3 +3841,120 @@ add_action('wp_footer', function() {
     <?php
 });
 
+
+add_action('wp_ajax_tbank_init_payment', 'abs_tbank_init_payment');
+add_action('wp_ajax_nopriv_tbank_init_payment', 'abs_tbank_init_payment');
+
+function abs_tbank_init_payment() {
+    $terminal_key = '1778777475774';
+    $password = '*$&xe&4M671pfCEy';
+    
+    $amount = intval($_POST['amount'] ?? 100);
+    $order_id = sanitize_text_field($_POST['order_id'] ?? 'test_' . time());
+    $description = sanitize_text_field($_POST['description'] ?? 'Тестовый платёж');
+    
+    $token_string = $amount . $description . $order_id . $password . $terminal_key;
+    $token = hash('sha256', $token_string);
+    
+    $request_data = [
+        'TerminalKey' => $terminal_key,
+        'Amount' => $amount,
+        'OrderId' => $order_id,
+        'Description' => $description,
+        'Token' => $token,
+    ];
+    
+    $response = wp_remote_post('https://securepay.tinkoff.ru/v2/Init', [
+        'headers' => ['Content-Type' => 'application/json'],
+        'body' => json_encode($request_data),
+        'timeout' => 30,
+    ]);
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error($response->get_error_message());
+    }
+    
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    
+    if (!empty($body['PaymentURL'])) {
+        wp_send_json_success(['payment_url' => $body['PaymentURL']]);
+    } else {
+        wp_send_json_error($body['Details'] ?? $body['Message'] ?? 'Неизвестная ошибка');
+    }
+}
+
+// Шорткод заказа озвучки
+add_shortcode('abs_order_voice', function() {
+    global $post;
+    // Если уже есть аудиоверсия — не показываем
+    $abs_book_id = get_post_meta($post->ID, '_ranobe_abs_book_id', true);
+    if ($abs_book_id) return '';
+
+    $chapters_count = 0;
+    
+    if ($post->post_type === 'ranobe') {
+        $chapters = get_posts(['post_type'=>'chapter','post_parent'=>$post->ID,'posts_per_page'=>-1,'fields'=>'ids']);
+        $chapters_count = count($chapters);
+    }
+    
+    // Расчёт суммы: 0.1₽ за главу, минимум 50₽, округление вверх до 50₽
+    $price = max(50, ceil($chapters_count * 0.1 / 50) * 50);
+    
+    ob_start();
+    ?>
+    <div style="background:linear-gradient(135deg,rgba(255,152,0,0.1),rgba(255,87,34,0.1));border:1px solid rgba(255,152,0,0.3);border-radius:16px;padding:20px;margin:15px 0;text-align:center;">
+        <h3 style="color:#ff9800;margin:0 0 10px;">🎙️ Заказать озвучку книги</h3>
+        <p style="color:rgba(255,255,255,0.7);font-size:0.9rem;margin:0 0 15px;">
+            Профессиональная озвучка всей книги: <strong>0.1₽ за главу</strong>, минимум 50₽
+        </p>
+        
+        <div style="display:flex;justify-content:center;gap:30px;margin-bottom:15px;">
+            <div style="text-align:center;">
+                <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Глав в книге</div>
+                <div style="color:#fff;font-size:1.5rem;font-weight:700;"><?php echo $chapters_count; ?></div>
+            </div>
+            <div style="text-align:center;">
+                <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Стоимость</div>
+                <div style="color:#ff9800;font-size:1.5rem;font-weight:700;"><?php echo $price; ?> ₽</div>
+            </div>
+        </div>
+        
+        <button id="voice-order-btn" style="background:linear-gradient(135deg,#ff9800,#ff5722);border:none;border-radius:40px;padding:12px 30px;color:#fff;font-weight:700;font-size:1rem;cursor:pointer;">
+            🎙️ Заказать озвучку за <?php echo $price; ?> ₽
+        </button>
+        <div id="voice-msg" style="margin-top:10px;"></div>
+    </div>
+
+    <script>
+    document.getElementById('voice-order-btn').addEventListener('click', function() {
+        this.textContent = 'Загрузка...';
+        this.disabled = true;
+        
+        var amount = <?php echo $price * 100; ?>; // в копейках
+        var formData = new FormData();
+        formData.append('action', 'tbank_init_payment');
+        formData.append('amount', amount);
+        formData.append('order_id', 'voice_<?php echo $post->ID; ?>_' + Date.now());
+        formData.append('description', 'Озвучка: <?php echo esc_js($post->post_title); ?> — <?php echo $chapters_count; ?> глав');
+        
+        fetch('<?php echo admin_url("admin-ajax.php"); ?>', {method:'POST', body: formData})
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.success && d.data && d.data.payment_url) {
+                window.location.href = d.data.payment_url;
+            } else {
+                document.getElementById('voice-msg').innerHTML = '<p style="color:#ff5555;">❌ ' + (d.data || 'Ошибка') + '</p>';
+                this.textContent = '🎙️ Заказать озвучку за <?php echo $price; ?> ₽';
+                this.disabled = false;
+            }
+        }.bind(this))
+        .catch(function() {
+            document.getElementById('voice-msg').innerHTML = '<p style="color:#ff5555;">❌ Ошибка</p>';
+            this.textContent = '🎙️ Заказать озвучку за <?php echo $price; ?> ₽';
+            this.disabled = false;
+        }.bind(this));
+    });
+    </script>
+    <?php
+    return ob_get_clean();
+});
