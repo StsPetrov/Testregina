@@ -15,6 +15,7 @@
         <div class="logo text-start pb-3 pb-md-0">
           <?php if ( has_custom_logo() ) : ?>
             <div class="site-logo"><?php the_custom_logo(); ?></div>
+            
           <?php endif; ?>
           <?php $blog_info = get_bloginfo( 'name' ); ?>
             <?php if ( ! empty( $blog_info ) ) : ?>

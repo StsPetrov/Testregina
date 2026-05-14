@@ -2752,6 +2752,7 @@ add_filter('wp_nav_menu_items', 'abs_add_auth_link', 10, 2);
 function abs_add_auth_link($items, $args) {
     if ($args->theme_location == 'primary') {
         if (is_user_logged_in()) {
+            
             $items .= '<li class="menu-item"><a href="' . wp_logout_url(home_url()) . '">🚪 Выйти</a></li>';
         } else {
             $items .= '<li class="menu-item"><a href="/login">🔐 Войти</a></li>';
@@ -2967,6 +2968,7 @@ function abs_add_book_links($items, $args) {
         $links = '<li class="menu-item"><a href="/">🏠 Главная</a></li>';
         $links .= '<li class="menu-item"><a href="/catalog?type=audio">🎧 Аудиокниги (' . $audio_count . ')</a></li>';
         $links .= '<li class="menu-item"><a href="/catalog?type=text">📖 Книги (' . $text_count . ')</a></li>';
+        $links .= '<li class="menu-item"><a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" style="background:rgba(255,152,0,0.15);color:#ff9800!important;border-radius:20px;padding:6px 16px!important;font-weight:600;">💰 Поддержать</a></li>';
         
         $items = $links . $items;
     }
@@ -3932,3 +3934,4 @@ add_action('wp_footer', function() {
 </script>
     <?php
 });
+
