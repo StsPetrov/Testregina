@@ -3809,18 +3809,16 @@ add_action('wp_ajax_tbank_init_payment', 'abs_tbank_init_payment');
 add_action('wp_ajax_nopriv_tbank_init_payment', 'abs_tbank_init_payment');
 
 function abs_tbank_init_payment() {
-    $terminal_key = '1778473798877DEMO';
-    $password = 'Q8GxtNt6R0vsPSvk';
+    $terminal_key = '1778777475774';
+    $password = '*$&xe&4M671pfCEy';
     
     $amount = intval($_POST['amount'] ?? 100);
     $order_id = sanitize_text_field($_POST['order_id'] ?? 'test_' . time());
     $description = sanitize_text_field($_POST['description'] ?? 'Тестовый платёж');
-    $success_url = home_url('/test-payment?payment=success');
-    $fail_url = home_url('/test-payment?payment=fail');
     
-    // Правильный порядок полей для токена (как в документации EACQ)
-    $token_string = $amount . $description . $order_id . $terminal_key;
-    $token = hash('sha256', $token_string . $password);
+    // Алфавитный порядок: Amount + Description + OrderId + Password + TerminalKey
+    $token_string = $amount . $description . $order_id . $password . $terminal_key;
+    $token = hash('sha256', $token_string);
     
     $request_data = [
         'TerminalKey' => $terminal_key,
@@ -3828,8 +3826,6 @@ function abs_tbank_init_payment() {
         'OrderId' => $order_id,
         'Description' => $description,
         'Token' => $token,
-        'SuccessURL' => $success_url,
-        'FailURL' => $fail_url,
     ];
     
     $response = wp_remote_post('https://securepay.tinkoff.ru/v2/Init', [
@@ -3839,7 +3835,7 @@ function abs_tbank_init_payment() {
     ]);
     
     if (is_wp_error($response)) {
-        wp_send_json_error('Ошибка: ' . $response->get_error_message());
+        wp_send_json_error($response->get_error_message());
     }
     
     $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -3856,10 +3852,9 @@ add_shortcode('abs_test_payment', function() {
     ob_start();
     ?>
     <div style="max-width:500px;margin:50px auto;background:rgba(26,26,46,0.9);border-radius:20px;padding:30px;border:1px solid rgba(13,202,240,0.2);text-align:center;">
-        <h2 style="color:#0dcaf0;margin-bottom:20px;">🧪 Тестовый платёж 1₽</h2>
-        <button id="tbank-pay-btn" style="background:linear-gradient(90deg,#0dcaf0,#5bc0de);border:none;border-radius:40px;padding:14px 40px;color:#1b2039;font-weight:700;font-size:1.1rem;cursor:pointer;">
-            💳 Оплатить 1 ₽
-        </button>
+        <h2 style="color:#0dcaf0;margin-bottom:20px;">🧪 Тестовый платёж T‑Bank</h2>
+        <p style="color:#fff;margin-bottom:10px;">Сумма: <strong style="color:#0dcaf0;">1 ₽</strong></p>
+        <button id="tbank-pay-btn" style="background:linear-gradient(90deg,#0dcaf0,#5bc0de);border:none;border-radius:40px;padding:14px 40px;color:#1b2039;font-weight:700;font-size:1.1rem;cursor:pointer;">💳 Оплатить 1 ₽</button>
         <div id="tbank-msg" style="margin-top:15px;"></div>
     </div>
 
@@ -3867,26 +3862,26 @@ add_shortcode('abs_test_payment', function() {
     document.getElementById('tbank-pay-btn').addEventListener('click', function() {
         this.textContent = 'Загрузка...';
         this.disabled = true;
+        
         var formData = new FormData();
         formData.append('action', 'tbank_init_payment');
         formData.append('amount', '100');
         formData.append('order_id', 'test_' + Date.now());
         formData.append('description', 'Тестовый платёж 1₽');
+        
         fetch('<?php echo admin_url("admin-ajax.php"); ?>', {method:'POST', body: formData})
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.success && d.data && d.data.payment_url) {
                 window.location.href = d.data.payment_url;
             } else {
-                document.getElementById('tbank-msg').innerHTML = 
-                    '<p style="color:#ff5555;">❌ ' + (d.data || 'Ошибка') + '</p>';
+                document.getElementById('tbank-msg').innerHTML = '<p style="color:#ff5555;">❌ ' + (d.data || 'Ошибка') + '</p>';
                 this.textContent = '💳 Оплатить 1 ₽';
                 this.disabled = false;
             }
         }.bind(this))
         .catch(function(e) {
-            document.getElementById('tbank-msg').innerHTML = 
-                '<p style="color:#ff5555;">❌ Ошибка: ' + e.message + '</p>';
+            document.getElementById('tbank-msg').innerHTML = '<p style="color:#ff5555;">❌ Ошибка: ' + e.message + '</p>';
             this.textContent = '💳 Оплатить 1 ₽';
             this.disabled = false;
         }.bind(this));
