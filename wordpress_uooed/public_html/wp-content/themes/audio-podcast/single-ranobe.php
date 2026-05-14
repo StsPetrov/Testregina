@@ -146,6 +146,9 @@ $chapters = get_posts(array(
                         </div>
                         
                         <!-- Список глав -->
+                        <div style="text-align:center;margin:10px 0;">
+    <a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#ff9800,#ff5722);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;font-size:1rem;margin-top: 10px;">💰 Поддержать проект</a>
+</div>
                         <div class="chapters-list">
                             <h4>Содержание</h4>
                             <ul id="chapter-list" style="list-style:none; padding:0; max-height:500px; overflow-y:auto; border-radius:12px; background:rgba(0,0,0,0.2);">

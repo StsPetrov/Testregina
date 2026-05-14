@@ -726,7 +726,8 @@ function abs_player_shortcode() {
         }
     }
     
-    $html = '<div class="audiobookshelf-player-container">';
+    $html = '<div style="text-align:center;margin:10px 0;"><a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#ff9800,#ff5722);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;font-size:1rem;margin-bottom: 10px;">💰 Поддержать проект</a></div>';
+$html .= '<div class="audiobookshelf-player-container">';
     
     // Вкладки
     if ($ranobe_permalink) {
@@ -3894,3 +3895,40 @@ add_shortcode('abs_test_payment', function() {
 });
 
 
+add_action('wp_footer', function() {
+    ?>
+    <a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" class="donate-float-btn" title="Поддержать проект">💰</a>
+   <style>
+.donate-float-btn {
+    position:fixed;
+    width:56px;height:56px;
+    background:linear-gradient(135deg,#ff9800,#ff5722);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:28px;
+    text-decoration:none;z-index:999;box-shadow:0 4px 15px rgba(255,87,34,0.4);
+    animation:donate-pulse 2s infinite;
+}
+@keyframes donate-pulse {
+    0%,100%{transform:scale(1)}50%{transform:scale(1.1)}
+}
+@media(max-width:768px){
+    .donate-float-btn{width:48px;height:48px;font-size:24px}
+}
+</style>
+<script>
+(function(){
+    var btn = document.querySelector('.donate-float-btn');
+    if(!btn) return;
+    var positions = [
+        {bottom:'80px',right:'20px'},
+        {bottom:'80px',left:'20px'},
+        {top:'120px',right:'20px'},
+        {top:'120px',left:'20px'},
+        {bottom:'140px',right:'20px'},
+        {bottom:'140px',left:'20px'},
+    ];
+    var pos = positions[Math.floor(Math.random() * positions.length)];
+    for(var k in pos) btn.style[k] = pos[k];
+})();
+</script>
+    <?php
+});
