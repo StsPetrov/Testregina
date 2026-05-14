@@ -1655,7 +1655,6 @@ li.wp-social-link-youtube {
     gap: 0;
     font-size: 0.8rem;
     color: rgba(255,255,255,0.5);
-    padding: 10px 0;
     margin: 0;
     list-style: none;
 }
@@ -1676,7 +1675,6 @@ li.wp-social-link-youtube {
 
 #breadcrumbs span {
     color: rgba(255,255,255,0.3);
-    margin: 0 4px;
     background: none !important;
 }
 
