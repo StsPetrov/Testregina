@@ -155,13 +155,9 @@ function waitAndSeek(seconds) {
 }
 
 function scrollToActiveTrack() {
-    setTimeout(function() {
-        var active = document.querySelector('#abs-track-list li.active-track');
-        if (active) {
-            active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    }, 300);
-};
+     function scrollToActiveTrack() {
+ // авто-скролл отключён
+}
 // Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     if (!absPlayerData || !absPlayerData.itemId) { return; }
