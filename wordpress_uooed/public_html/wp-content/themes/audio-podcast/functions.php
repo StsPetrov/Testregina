@@ -4001,3 +4001,61 @@ $order = ($source === 'ifreedom') ? 'DESC' : 'ASC';
     echo '</body></FictionBook>';
     exit;
 }
+
+// Функция создания уведомления
+function abs_create_notification($user_id, $type, $message, $link = '') {
+    global $wpdb;
+    $wpdb->insert($wpdb->prefix . 'abs_notifications', [
+        'user_id' => $user_id,
+        'type' => $type,
+        'message' => $message,
+        'link' => $link,
+    ]);
+}
+
+// Новая глава → уведомить читателей
+add_action('save_post', function($post_id, $post) {
+    if ($post->post_type !== 'chapter' || $post->post_status !== 'publish') return;
+    if (get_post_meta($post_id, '_notified', true)) return;
+    
+    $ranobe_id = $post->post_parent;
+    $ranobe_title = get_the_title($ranobe_id);
+    
+    global $wpdb;
+    $readers = $wpdb->get_col($wpdb->prepare(
+        "SELECT DISTINCT user_id FROM {$wpdb->prefix}abs_reading_progress WHERE ranobe_id = %d",
+        $ranobe_id
+    ));
+    
+    foreach ($readers as $uid) {
+        abs_create_notification($uid, 'new_chapter', 
+            "📖 Новая глава: «{$ranobe_title}» — {$post->post_title}",
+            get_permalink($post_id)
+        );
+    }
+    
+    update_post_meta($post_id, '_notified', 1);
+}, 10, 2);
+
+// Аудиоверсия добавлена → уведомить избранное
+add_action('updated_post_meta', function($meta_id, $post_id, $meta_key) {
+    if ($meta_key !== '_ranobe_abs_book_id') return;
+    
+    $abs_book_id = get_post_meta($post_id, '_ranobe_abs_book_id', true);
+    if (!$abs_book_id) return;
+    
+    $ranobe_title = get_the_title($post_id);
+    
+    global $wpdb;
+    $users = $wpdb->get_col($wpdb->prepare(
+        "SELECT DISTINCT user_id FROM {$wpdb->prefix}abs_favorites WHERE ranobe_id = %d",
+        $post_id
+    ));
+    
+    foreach ($users as $uid) {
+        abs_create_notification($uid, 'audio_added',
+            "🎧 Аудиоверсия: «{$ranobe_title}»",
+            get_permalink($post_id)
+        );
+    }
+}, 10, 3);
