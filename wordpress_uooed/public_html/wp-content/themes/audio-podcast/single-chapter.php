@@ -246,8 +246,6 @@ while (have_posts()) : the_post();
                 <?php 
                 // Выводим контент, оборачивая каждый параграф в <p>
                 $content = get_the_content();
-                // Заменяем двойные переносы строк на параграфы
-                $content = wpautop($content);
                 echo $content;
                 ?>
             </div>

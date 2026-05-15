@@ -3992,7 +3992,7 @@ $order = ($source === 'ifreedom') ? 'DESC' : 'ASC';
     
     echo '<?xml version="1.0" encoding="UTF-8"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info><book-title>' . esc_html($post->post_title) . '</book-title></title-info></description><body>';
     foreach ($chapters as $ch) {
-        echo '<section><title>' . esc_html($ch->post_title) . '</title><p>' . esc_html(strip_tags($ch->post_content)) . '</p></section>';
+        echo '<section><title>' . esc_html($ch->post_title) . '</title>' . wpautop($ch->post_content) . '</section>';
     }
     echo '</body></FictionBook>';
     exit;
