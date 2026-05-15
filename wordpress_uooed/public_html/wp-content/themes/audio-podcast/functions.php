@@ -667,8 +667,6 @@ require_once get_template_directory() . '/includes/abs-functions.php';
 require_once get_template_directory() . '/includes/abs-parser-ranobe-fb2.php';
 require_once get_template_directory() . '/includes/abs-parser-ranobe-fb2-admin.php';
 
-require_once get_template_directory() . '/includes/abs-parser-ifreedom.php';
-require_once get_template_directory() . '/includes/abs-parser-ifreedom-admin.php';
 
 // Подключаем каталог книг
 require_once get_template_directory() . '/includes/abs-catalog.php';
