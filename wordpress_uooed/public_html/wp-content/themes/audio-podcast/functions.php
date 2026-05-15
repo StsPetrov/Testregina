@@ -4060,19 +4060,7 @@ add_action('updated_post_meta', function($meta_id, $post_id, $meta_key) {
     }
 }, 10, 3);
 
-// Колокольчик уведомлений в меню
-add_filter('wp_nav_menu_items', function($items, $args) {
-    if ($args->theme_location == 'primary' && is_user_logged_in()) {
-        global $wpdb;
-        $count = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}abs_notifications WHERE user_id = %d AND is_read = 0",
-            get_current_user_id()
-        ));
-        $badge = $count > 0 ? '<span style="background:#ff4444;color:#fff;border-radius:50%;padding:2px 6px;font-size:0.7rem;margin-left:4px;">' . $count . '</span>' : '';
-        $items .= '<li class="menu-item"><a href="/notifications">🔔 Уведомления' . $badge . '</a></li>';
-    }
-    return $items;
-}, 20, 2);
+
 
 add_shortcode('abs_notifications', function() {
     if (!is_user_logged_in()) return '<p>🔒 Нужно войти</p>';
