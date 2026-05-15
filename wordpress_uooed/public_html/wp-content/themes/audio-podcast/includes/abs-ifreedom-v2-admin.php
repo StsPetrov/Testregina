@@ -26,6 +26,7 @@ function abs_ifreedom_v2_admin_page() {
         $book = $wpdb->get_row("SELECT * FROM $table WHERE status IN('new','error') ORDER BY id ASC LIMIT 1");
         if ($book) {
             $result = abs_ifreedom_v2_process_book($book->slug);
+            abs_telegram_log("📥 V2 AJAX: {$book->title} — {$result['loaded']}/{$result['total']} глав");
             echo '<div class="notice notice-success"><p>Обработано: ' . esc_html($book->title) . ' — ' . $result['loaded'] . '/' . $result['total'] . ' глав</p></div>';
         } else {
             echo '<div class="notice notice-warning"><p>Нет книг для обработки</p></div>';

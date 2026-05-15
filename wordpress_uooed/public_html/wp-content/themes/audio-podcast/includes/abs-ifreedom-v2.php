@@ -296,7 +296,8 @@ function abs_ifreedom_v2_process_book($slug) {
     $book_data = abs_ifreedom_v2_parse_book_page($slug);
     if (isset($book_data['error'])) {
         $wpdb->update($table, ['status' => 'error', 'error_msg' => $book_data['error']], ['slug' => $slug]);
-        return ['status' => 'error', 'message' => $book_data['error']];
+        abs_telegram_log("❌ V2: {$slug} — {$book_data['error']}");
+return ['status' => 'error', 'message' => $book_data['error']];
     }
     
     $total_chapters = count($book_data['chapters']);
@@ -349,5 +350,8 @@ function abs_ifreedom_v2_process_book($slug) {
         'last_parsed_at'  => current_time('mysql'),
     ], ['slug' => $slug]);
     
-    return ['status' => 'ok', 'loaded' => $loaded, 'total' => $total_chapters];
+    // Telegram-уведомление
+abs_telegram_log("✅ V2: {$book_data['title']} — {$loaded}/{$total_chapters} глав");
+
+return ['status' => 'ok', 'loaded' => $loaded, 'total' => $total_chapters];
 }
