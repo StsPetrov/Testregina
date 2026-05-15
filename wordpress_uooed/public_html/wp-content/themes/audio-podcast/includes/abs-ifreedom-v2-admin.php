@@ -178,18 +178,23 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
 </div>
         
         <!-- Настройки -->
-        <div class="card" style="margin:20px 0;padding:15px;">
-            <h3>⚙️ Настройки</h3>
-            <form id="v2-settings-form" style="display:flex;gap:15px;flex-wrap:wrap;align-items:end;">
-                <div><label>Мин. пауза (мс)</label><br><input type="number" name="min_delay_ms" value="<?php echo $settings['min_delay_ms']; ?>"></div>
-                <div><label>Макс. пауза (мс)</label><br><input type="number" name="max_delay_ms" value="<?php echo $settings['max_delay_ms']; ?>"></div>
-                <div><label>Запросов/мин</label><br><input type="number" name="max_per_minute" value="<?php echo $settings['max_per_minute']; ?>"></div>
-                <div><label>Батч ручной</label><br><input type="number" name="manual_batch_size" value="<?php echo $settings['manual_batch_size']; ?>"></div>
-                <div><label>Батч Cron</label><br><input type="number" name="cron_batch_size" value="<?php echo $settings['cron_batch_size']; ?>"></div>
-                <div><label>Таймаут HTTP</label><br><input type="number" name="http_timeout" value="<?php echo $settings['http_timeout']; ?>"></div>
-                <div><button type="submit" class="button button-primary">💾 Сохранить</button></div>
-            </form>
-        </div>
+        <div class="card" style="margin:20px 0;">
+    <div class="card-header" onclick="jQuery('#v2-settings-body').toggle()" style="cursor:pointer;padding:15px;display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">⚙️ Настройки парсера</h3>
+        <span>▼</span>
+    </div>
+    <div id="v2-settings-body" style="display:none;padding:15px;">
+        <form id="v2-settings-form" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;">
+            <div><label>Мин. пауза (мс)</label><br><input type="number" name="min_delay_ms" value="<?php echo $settings['min_delay_ms']; ?>" style="width:100%;"></div>
+            <div><label>Макс. пауза (мс)</label><br><input type="number" name="max_delay_ms" value="<?php echo $settings['max_delay_ms']; ?>" style="width:100%;"></div>
+            <div><label>Запросов/мин</label><br><input type="number" name="max_per_minute" value="<?php echo $settings['max_per_minute']; ?>" style="width:100%;"></div>
+            <div><label>Батч ручной</label><br><input type="number" name="manual_batch_size" value="<?php echo $settings['manual_batch_size']; ?>" style="width:100%;"></div>
+            <div><label>Батч Cron</label><br><input type="number" name="cron_batch_size" value="<?php echo $settings['cron_batch_size']; ?>" style="width:100%;"></div>
+            <div><label>Таймаут HTTP</label><br><input type="number" name="http_timeout" value="<?php echo $settings['http_timeout']; ?>" style="width:100%;"></div>
+            <div style="align-self:end;"><button type="submit" class="button button-primary">💾 Сохранить</button></div>
+        </form>
+    </div>
+</div>
         
         <!-- Кнопки -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:20px 0;">

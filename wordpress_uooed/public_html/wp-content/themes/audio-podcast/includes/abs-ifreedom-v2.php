@@ -323,10 +323,15 @@ function abs_ifreedom_v2_parse_chapter($chapter_url) {
         }
     }
     
+    $content = implode("\n", $content_parts);
+    // Замена ссылок
+    $content = str_replace('ifreedom.su', '1001ranobe.ru', $content);
+    $content = preg_replace('#href="/([^"]*)"#', 'href="https://1001ranobe.ru/$1"', $content);
+    
     $volume = 0;
     if (preg_match('/[Тт]ом\s*(\d+)/', $title, $vm)) $volume = (int)$vm[1];
     
-    return ['title' => $title, 'content' => implode("\n", $content_parts), 'volume' => $volume];
+    return ['title' => $title, 'content' => $content, 'volume' => $volume];
 }
 
 // ============================================================

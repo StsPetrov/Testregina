@@ -80,20 +80,7 @@ while (have_posts()) : the_post();
         // Определяем источник
     $source = get_post_meta($ranobe_id, '_ranobe_source', true);
 
-    if ($source === 'ifreedom') {
-        // Для ifreedom — главы в обратном порядке (DESC)
-        $prev_chapter = get_posts(array(
-            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
-            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'ASC',
-            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '>', 'type' => 'NUMERIC'))
-        ));
-        $next_chapter = get_posts(array(
-            'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
-            'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'DESC',
-            'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '<', 'type' => 'NUMERIC'))
-        ));
-    } else {
-        // Стандартный порядок (ASC)
+            // Стандартный порядок (ASC)
         $prev_chapter = get_posts(array(
             'post_type' => 'chapter', 'post_parent' => $ranobe_id, 'posts_per_page' => 1,
             'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'DESC',
@@ -104,7 +91,7 @@ while (have_posts()) : the_post();
             'orderby' => 'meta_value_num', 'meta_key' => '_chapter_number', 'order' => 'ASC',
             'meta_query' => array(array('key' => '_chapter_number', 'value' => $chapter_num, 'compare' => '>', 'type' => 'NUMERIC'))
         ));
-    }
+    
     ?>
     
 

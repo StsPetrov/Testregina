@@ -20,8 +20,7 @@ get_header();
                     $status_labels = ['ongoing' => '🔄 Онгоинг', 'completed' => '✅ Завершено', 'frozen' => '❄️ Заморожено'];
                     $lang_labels = ['jp' => '🇯🇵 Японский', 'cn' => '🇨🇳 Китайский', 'kr' => '🇰🇷 Корейский', 'en' => '🇬🇧 Английский', 'ru' => '🇷🇺 Русский'];
                     
-                    $source = get_post_meta($ranobe_id, '_ranobe_source', true);
-$order = ($source === 'ifreedom') ? 'DESC' : 'ASC';
+                    $order = 'ASC';
 
 $chapters = get_posts(array(
     'post_type' => 'chapter',
