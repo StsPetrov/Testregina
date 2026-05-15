@@ -3983,7 +3983,9 @@ add_action('wp_ajax_generate_fb2', 'abs_generate_fb2_for_order');
 function abs_generate_fb2_for_order() {
     $ranobe_id = intval($_GET['ranobe_id']);
     $post = get_post($ranobe_id);
-    $chapters = get_posts(['post_type'=>'chapter','post_parent'=>$ranobe_id,'posts_per_page'=>-1,'orderby'=>'meta_value_num','meta_key'=>'_chapter_number','order'=>'ASC']);
+    $source = get_post_meta($ranobe_id, '_ranobe_source', true);
+$order = ($source === 'ifreedom') ? 'DESC' : 'ASC';
+    $chapters = get_posts(['post_type'=>'chapter','post_parent'=>$ranobe_id,'posts_per_page'=>-1,'orderby'=>'meta_value_num','meta_key'=>'_chapter_number','order'=>$order]);
     
     header('Content-Type: application/xml');
     header('Content-Disposition: attachment; filename="' . sanitize_title($post->post_title) . '.fb2"');
