@@ -453,7 +453,7 @@ function abs_fb2_parse($fb2_content, $start_number = 1) {
         $title = '';
         $titleNodes = $xpath->query('.//title', $section);
         if ($titleNodes->length > 0) {
-            $title = trim($dom->saveHTML($titleNodes->item(0)));
+            $title = trim(strip_tags($dom->saveHTML($titleNodes->item(0))));
         }
 
         // Параграфы
