@@ -3874,6 +3874,10 @@ if (preg_match('/voice_(\d+)_/', $order_id, $m)) {
         'amount' => $amount / 100,
         'customer' => is_user_logged_in() ? wp_get_current_user()->user_login : 'Гость',
         'status' => 'paid',
+        // Отправка в Telegram
+$amount_rub = $amount / 100;
+$message = "🎙️ Новый заказ на озвучку!\n📖 {$book_title}\n💰 {$amount_rub} ₽\n👤 " . (is_user_logged_in() ? wp_get_current_user()->user_login : 'Гость');
+abs_telegram_log($message);
     ]);
 }
     
