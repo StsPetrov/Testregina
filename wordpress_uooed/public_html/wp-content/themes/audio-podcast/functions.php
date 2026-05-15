@@ -3853,8 +3853,29 @@ function abs_tbank_init_payment() {
     $order_id = sanitize_text_field($_POST['order_id'] ?? 'test_' . time());
     $description = sanitize_text_field($_POST['description'] ?? 'Тестовый платёж');
     
-    $token_string = $amount . $description . $order_id . $password . $terminal_key;
-    $token = hash('sha256', $token_string);
+$token_string = $amount . $description . $order_id . $password . $terminal_key;
+$token = hash('sha256', $token_string);
+
+// Сохраняем заказ
+$ranobe_id = 0;
+$book_title = '';
+if (preg_match('/voice_(\d+)_/', $order_id, $m)) {
+    $ranobe_id = $m[1];
+    $post = get_post($ranobe_id);
+    $book_title = $post ? $post->post_title : '';
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'abs_voice_orders';
+    $wpdb->insert($table, [
+        'order_id' => $order_id,
+        'ranobe_id' => $ranobe_id,
+        'book_title' => $book_title,
+        'chapters_count' => intval(preg_replace('/[^0-9]/', '', sanitize_text_field($_POST['description'] ?? '0'))),
+        'amount' => $amount / 100,
+        'customer' => is_user_logged_in() ? wp_get_current_user()->user_login : 'Гость',
+        'status' => 'paid',
+    ]);
+}
     
     $request_data = [
         'TerminalKey' => $terminal_key,
@@ -3957,3 +3978,20 @@ add_shortcode('abs_order_voice', function() {
 });
 
 require_once get_template_directory() . '/includes/abs-voice-orders.php';
+
+add_action('wp_ajax_generate_fb2', 'abs_generate_fb2_for_order');
+function abs_generate_fb2_for_order() {
+    $ranobe_id = intval($_GET['ranobe_id']);
+    $post = get_post($ranobe_id);
+    $chapters = get_posts(['post_type'=>'chapter','post_parent'=>$ranobe_id,'posts_per_page'=>-1,'orderby'=>'meta_value_num','meta_key'=>'_chapter_number','order'=>'ASC']);
+    
+    header('Content-Type: application/xml');
+    header('Content-Disposition: attachment; filename="' . sanitize_title($post->post_title) . '.fb2"');
+    
+    echo '<?xml version="1.0" encoding="UTF-8"?><FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info><book-title>' . esc_html($post->post_title) . '</book-title></title-info></description><body>';
+    foreach ($chapters as $ch) {
+        echo '<section><title>' . esc_html($ch->post_title) . '</title><p>' . esc_html(strip_tags($ch->post_content)) . '</p></section>';
+    }
+    echo '</body></FictionBook>';
+    exit;
+}

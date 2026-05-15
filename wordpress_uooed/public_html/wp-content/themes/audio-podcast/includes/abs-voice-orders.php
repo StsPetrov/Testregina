@@ -1,3 +1,9 @@
+<?php
+// Страница заказов в админке
+add_action('admin_menu', function() {
+    add_menu_page('Заказы на озвучку', '🎙️ Заказы', 'manage_options', 'abs-voice-orders', 'abs_voice_orders_page', 'dashicons-microphone', 31);
+});
+
 // Страница заказов в админке
 add_action('admin_menu', function() {
     add_menu_page('Заказы на озвучку', '🎙️ Заказы', 'manage_options', 'abs-voice-orders', 'abs_voice_orders_page', 'dashicons-microphone', 31);
@@ -43,6 +49,7 @@ function abs_voice_orders_page() {
                     <th>Глав</th>
                     <th>Сумма</th>
                     <th>Клиент</th>
+                    <th>FB2</th>
                     <th>Статус</th>
                     <th>Дата</th>
                 </tr>
@@ -57,6 +64,9 @@ function abs_voice_orders_page() {
                         <td><?php echo $order->chapters_count; ?></td>
                         <td><?php echo $order->amount; ?> ₽</td>
                         <td><?php echo esc_html($order->customer); ?></td>
+<td>
+    <a href="<?php echo admin_url('admin-ajax.php?action=generate_fb2&ranobe_id=' . $order->ranobe_id); ?>" class="button button-small" target="_blank">📥 FB2</a>
+</td>
                         <td>
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="order_id" value="<?php echo $order->id; ?>">
