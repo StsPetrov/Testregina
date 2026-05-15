@@ -141,6 +141,8 @@ function abs_ifreedom_v2_admin_page() {
         case 'title_desc': $order_by = "ORDER BY title DESC"; break;
         case 'chapters_asc': $order_by = "ORDER BY chapters_count ASC"; break;
         case 'chapters_desc': $order_by = "ORDER BY chapters_count DESC"; break;
+        case 'views_desc': $order_by = "ORDER BY views DESC"; break;
+case 'views_asc': $order_by = "ORDER BY views ASC"; break;
     }
     
     $total = $wpdb->get_var("SELECT COUNT(*) FROM $table");
@@ -224,6 +226,8 @@ function abs_ifreedom_v2_admin_page() {
                 <option value="title_desc" <?php selected($sort_by, 'title_desc'); ?>>Название Я-А</option>
                 <option value="chapters_asc" <?php selected($sort_by, 'chapters_asc'); ?>>Глав ↑</option>
                 <option value="chapters_desc" <?php selected($sort_by, 'chapters_desc'); ?>>Глав ↓</option>
+                <option value="views_desc" <?php selected($sort_by, 'views_desc'); ?>>Просмотры ↓</option>
+<option value="views_asc" <?php selected($sort_by, 'views_asc'); ?>>Просмотры ↑</option>
             </select>
             <input type="text" id="search-input" placeholder="Поиск..." value="<?php echo esc_attr($search); ?>" style="width:200px;" onkeydown="if(event.key==='Enter')applyFilters()">
             <button class="button" onclick="applyFilters()">🔍</button>
@@ -239,8 +243,10 @@ function abs_ifreedom_v2_admin_page() {
                     <td class="check-column"><input type="checkbox" id="select-all-top"></td>
                     <th>Slug</th>
                     <th>Название</th>
-                    <th>Глав</th>
-                    <th>Загружено</th>
+<th>Просмотров</th>
+<th>Бесплатных глав</th>
+<th>Всего глав</th>
+<th>Загружено</th>
                     <th>Статус</th>
                     <th>Дата</th>
                 </tr>
@@ -261,8 +267,10 @@ function abs_ifreedom_v2_admin_page() {
                         <td><input type="checkbox" class="book-checkbox" value="<?php echo esc_attr($book->slug); ?>"></td>
                         <td><code><?php echo esc_html($book->slug); ?></code></td>
                         <td><a href="<?php echo esc_url($book->url); ?>" target="_blank"><?php echo esc_html($book->title); ?></a></td>
-                        <td><?php echo $book->chapters_count; ?></td>
-                        <td><?php echo $book->parsed_chapters; ?></td>
+<td><?php echo number_format($book->views, 0, ',', ' '); ?></td>
+<td><?php echo $book->chapters_count; ?></td>
+<td><?php echo $book->total_chapters; ?></td>
+<td><?php echo $book->parsed_chapters; ?></td>
                         <td><span style="<?php echo $l[1]; ?>"><?php echo $l[0]; ?></span></td>
                         <td><?php echo $book->last_parsed_at ?: '—'; ?></td>
                     </tr>
