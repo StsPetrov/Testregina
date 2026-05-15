@@ -3955,3 +3955,5 @@ add_shortcode('abs_order_voice', function() {
     <?php
     return ob_get_clean();
 });
+
+require_once get_template_directory() . '/includes/abs-voice-orders.php';
