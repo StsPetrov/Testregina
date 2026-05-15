@@ -4100,3 +4100,6 @@ add_shortcode('abs_notifications', function() {
     <?php
     return ob_get_clean();
 });
+
+
+require_once get_template_directory() . '/includes/abs-ifreedom-v2.php';
