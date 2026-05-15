@@ -89,7 +89,7 @@ function abs_fb2_get_last_catalog_page() {
     if (is_array($html) && isset($html['error'])) return 1;
 
     $dom = new DOMDocument();
-    @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+    $dom->loadXML($fb2_content);
     $xpath = new DOMXPath($dom);
 
     $max_page = 1;
@@ -453,14 +453,14 @@ function abs_fb2_parse($fb2_content, $start_number = 1) {
         $title = '';
         $titleNodes = $xpath->query('.//title', $section);
         if ($titleNodes->length > 0) {
-            $title = trim(strip_tags($dom->saveHTML($titleNodes->item(0))));
+            $title = trim($dom->saveHTML($titleNodes->item(0)));
         }
 
         // Параграфы
         $paragraphs = [];
         $pNodes = $xpath->query('.//p', $section);
         foreach ($pNodes as $p) {
-            $t = trim(strip_tags($dom->saveHTML($p)));
+            $t = trim($dom->saveHTML($p));
             if ($t) $paragraphs[] = $t;
         }
 
