@@ -191,7 +191,7 @@ foreach ($chapters as $ch):
                     
                     <?php if (!$audio_page_url): ?>
                         <div style="text-align:center; margin:0 0 20px 0;">
-                            <a href="/заказать-озвучку-книги" style="background:linear-gradient(135deg,#E94E35,#E91E8C); color:#fff; padding:12px 30px; border-radius:30px; text-decoration:none; font-weight:600; font-size:1rem; display:inline-block;">🎙️ Заказать озвучку этой книги</a>
+    <a href="https://pay.cloudtips.ru/p/db763c18" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#ff9800,#ff5722);color:#fff;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:700;font-size:1rem;margin-top: 10px;">💰 Поддержать проект</a>
                         </div>
                     <?php endif; ?>
                     

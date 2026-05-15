@@ -3904,10 +3904,7 @@ add_shortcode('abs_order_voice', function() {
     ?>
     <div style="background:linear-gradient(135deg,rgba(255,152,0,0.1),rgba(255,87,34,0.1));border:1px solid rgba(255,152,0,0.3);border-radius:16px;padding:20px;margin:15px 0;text-align:center;">
         <h3 style="color:#ff9800;margin:0 0 10px;">🎙️ Заказать озвучку книги</h3>
-        <p style="color:rgba(255,255,255,0.7);font-size:0.9rem;margin:0 0 15px;">
-            Профессиональная озвучка всей книги: <strong>0.1₽ за главу</strong>, минимум 50₽
-        </p>
-        
+                
         <div style="display:flex;justify-content:center;gap:30px;margin-bottom:15px;">
             <div style="text-align:center;">
                 <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Глав в книге</div>
