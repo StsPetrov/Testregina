@@ -435,7 +435,7 @@ function abs_fb2_parse($fb2_content, $start_number = 1) {
     $dom->recover = true; // пытается исправить кривой XML
     $dom->strictErrorChecking = false;
     libxml_use_internal_errors(true);
-    $dom->loadHTML($fb2_content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR | LIBXML_NOWARNING);
+$dom->loadXML($fb2_content);
     libxml_clear_errors();
 
     $xpath = new DOMXPath($dom);
@@ -464,11 +464,15 @@ function abs_fb2_parse($fb2_content, $start_number = 1) {
             if ($t) $paragraphs[] = $t;
         }
 
-        if ($paragraphs) {
+                if ($paragraphs) {
+$content = implode("\n\n", $paragraphs);
+$content = preg_replace('#https?://ranobe\.me/ranobe\d+#', 'https://1001ranobe.ru', $content);
+$content = preg_replace('#href="/([^"]*)"#', 'href="https://1001ranobe.ru/$1"', $content);
+            
             $chapters[] = [
                 'number'  => $chapter_num,
                 'title'   => $title ?: "Глава {$chapter_num}",
-                'content' => implode("\n\n", $paragraphs),
+                'content' => $content,
                 'volume'  => 0,
             ];
             $chapter_num++;
