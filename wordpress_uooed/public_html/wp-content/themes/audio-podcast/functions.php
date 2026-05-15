@@ -4059,3 +4059,56 @@ add_action('updated_post_meta', function($meta_id, $post_id, $meta_key) {
         );
     }
 }, 10, 3);
+
+// Колокольчик уведомлений в меню
+add_filter('wp_nav_menu_items', function($items, $args) {
+    if ($args->theme_location == 'primary' && is_user_logged_in()) {
+        global $wpdb;
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}abs_notifications WHERE user_id = %d AND is_read = 0",
+            get_current_user_id()
+        ));
+        $badge = $count > 0 ? '<span style="background:#ff4444;color:#fff;border-radius:50%;padding:2px 6px;font-size:0.7rem;margin-left:4px;">' . $count . '</span>' : '';
+        $items .= '<li class="menu-item"><a href="/notifications">🔔 Уведомления' . $badge . '</a></li>';
+    }
+    return $items;
+}, 20, 2);
+
+add_shortcode('abs_notifications', function() {
+    if (!is_user_logged_in()) return '<p>🔒 Нужно войти</p>';
+    
+    global $wpdb;
+    $user_id = get_current_user_id();
+    
+    // Отмечаем как прочитанные
+    if (isset($_GET['mark_read'])) {
+        $wpdb->update($wpdb->prefix . 'abs_notifications', ['is_read' => 1], ['user_id' => $user_id]);
+    }
+    
+    $notifications = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}abs_notifications WHERE user_id = %d ORDER BY created_at DESC LIMIT 50",
+        $user_id
+    ));
+    
+    ob_start();
+    ?>
+    <div style="max-width:600px;margin:30px auto;">
+        <h2>🔔 Уведомления</h2>
+        <a href="?mark_read=1" style="color:#0dcaf0;font-size:0.85rem;">Отметить все прочитанными</a>
+        
+        <?php if (empty($notifications)): ?>
+            <p>Нет уведомлений</p>
+        <?php else: foreach ($notifications as $n): ?>
+            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;margin:8px 0;<?php echo $n->is_read ? 'opacity:0.5;' : 'border-left:3px solid #0dcaf0;'; ?>">
+                <?php if ($n->link): ?>
+                    <a href="<?php echo esc_url($n->link); ?>" style="text-decoration:none;color:inherit;">
+                <?php endif; ?>
+                <?php echo esc_html($n->message); ?>
+                <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);"><?php echo $n->created_at; ?></div>
+                <?php if ($n->link): ?></a><?php endif; ?>
+            </div>
+        <?php endforeach; endif; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+});
