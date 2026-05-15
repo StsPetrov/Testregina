@@ -40,7 +40,7 @@ function abs_ifreedom_v2_scan_ajax() {
     check_ajax_referer('abs_ifreedom_v2_nonce');
     if (!current_user_can('manage_options')) wp_send_json_error();
     
-    require_once __DIR__ . '/abs-ifreedom-v2.php';
+    require_once get_template_directory() . '/includes/abs-ifreedom-v2.php';
     
     $page = (int)($_POST['page'] ?? 1);
     $last_page = (int)($_POST['last_page'] ?? 0);
@@ -72,7 +72,7 @@ function abs_ifreedom_v2_process_ajax() {
     check_ajax_referer('abs_ifreedom_v2_nonce');
     if (!current_user_can('manage_options')) wp_send_json_error();
     
-    require_once __DIR__ . '/abs-ifreedom-v2.php';
+    require_once get_template_directory() . '/includes/abs-ifreedom-v2.php';
     
     global $wpdb;
     $table = $wpdb->prefix . 'abs_ifreedom_v2_queue';
@@ -162,12 +162,20 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
         <h1>📚 Парсер Ifreedom v2</h1>
         
         <!-- Статистика -->
-        <div class="abs-stats" style="display:flex;gap:20px;margin:20px 0;">
-            <div class="stat-box"><span style="font-size:2rem;font-weight:700;"><?php echo $total; ?></span><br>Всего</div>
-            <div class="stat-box" style="color:#007cba;"><span style="font-size:2rem;font-weight:700;"><?php echo $new; ?></span><br>Новых</div>
-            <div class="stat-box" style="color:#00a32a;"><span style="font-size:2rem;font-weight:700;"><?php echo $done; ?></span><br>Готово</div>
-            <div class="stat-box" style="color:#d63638;"><span style="font-size:2rem;font-weight:700;"><?php echo $error; ?></span><br>Ошибок</div>
-        </div>
+<div class="abs-stats" style="display:flex;gap:20px;margin:20px 0;">
+    <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
+        <span style="font-size:2rem;font-weight:700;"><?php echo $total; ?></span><br>Всего
+    </div>
+    <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
+        <span style="font-size:2rem;font-weight:700;color:#007cba;"><?php echo $new; ?></span><br>Новых
+    </div>
+    <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
+        <span style="font-size:2rem;font-weight:700;color:#00a32a;"><?php echo $done; ?></span><br>Готово
+    </div>
+    <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
+        <span style="font-size:2rem;font-weight:700;color:#d63638;"><?php echo $error; ?></span><br>Ошибок
+    </div>
+</div>
         
         <!-- Настройки -->
         <div class="card" style="margin:20px 0;padding:15px;">
