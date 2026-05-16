@@ -522,7 +522,19 @@ function abs_ifreedom_v2_process_book($slug) {
     abs_telegram_log($msg);
     abs_ifreedom_v2_log("Done: {$book_title} — {$loaded}/{$total}");
     
-    return ['status' => 'ok', 'loaded' => $loaded, 'total' => $total, 'vip_skipped' => $vip_skipped];
+    $log_msg = $finished 
+    ? "✅ Загружено {$loaded}/{$total} глав" 
+    : "📖 Пакет {$be}/{$total} глав";
+
+return [
+    'status' => 'ok',
+    'loaded' => $loaded,
+    'total' => $total,
+    'finished' => $finished,
+    'next_chapter' => $be,
+    'vip_skipped' => $vip_skipped,
+    'log' => $log_msg,
+];
 }
 
 // ============================================================
