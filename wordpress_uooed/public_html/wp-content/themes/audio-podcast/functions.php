@@ -4102,3 +4102,5 @@ add_shortcode('abs_notifications', function() {
 
 require_once get_template_directory() . '/includes/abs-ifreedom-v2.php';
 require_once get_template_directory() . '/includes/abs-ifreedom-v2-admin.php';
+
+add_filter('nonce_life', function() { return 3600; }); // 1 час

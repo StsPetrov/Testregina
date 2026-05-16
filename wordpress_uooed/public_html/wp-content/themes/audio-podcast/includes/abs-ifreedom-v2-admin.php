@@ -396,6 +396,7 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
         });
         
         function processBooks(slugs, index, processed, startChapter) {
+    var nonce = '<?php echo wp_create_nonce("abs_ifreedom_v2_nonce"); ?>';
     $.post(ajaxurl, {
         action: 'abs_ifreedom_v2_process',
         slugs: slugs,
