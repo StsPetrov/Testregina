@@ -69,8 +69,6 @@ function abs_ifreedom_v2_scan_ajax() {
 
 add_action('wp_ajax_abs_ifreedom_v2_process', 'abs_ifreedom_v2_process_ajax');
 function abs_ifreedom_v2_process_ajax() {
-    ini_set('memory_limit', '256M');
-    set_time_limit(300);
     check_ajax_referer('abs_ifreedom_v2_nonce');
     if (!current_user_can('manage_options')) wp_send_json_error();
     
@@ -94,31 +92,22 @@ function abs_ifreedom_v2_process_ajax() {
     }
     
     $slug = $queue[$index];
-    $start_chapter = (int)($_POST['start_chapter'] ?? 0);
-    
-    $result = abs_ifreedom_v2_process_book($slug, $start_chapter);
     $book = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE slug = %s", $slug));
     
-    $book_title = $wpdb->get_var($wpdb->prepare("SELECT title FROM $table WHERE slug = %s", $slug));
+    $result = abs_ifreedom_v2_process_book($slug);
     
-    if ($result['status'] === 'ok' && $result['finished']) {
+    if ($result['status'] === 'ok') {
         $processed++;
-        $index++;
-        if (function_exists('abs_telegram_log')) {
-            abs_telegram_log("📥 V2: {$book_title} — {$result['loaded']}/{$result['total']} глав");
-        }
+        abs_telegram_log("📥 V2: {$book->title} — {$result['loaded']}/{$result['total']} глав");
     }
     
-    $log_msg = $result['finished'] 
-        ? "✅ {$book_title} — {$result['loaded']}/{$result['total']}" 
-        : "📖 {$book_title} — {$result['next_chapter']}/{$result['total']}";
-    
     wp_send_json_success([
-        'finished' => ($index >= $total),
+        'finished' => ($index + 1 >= $total),
         'processed' => $processed, 'total' => $total,
-        'next_index' => $index,
-        'start_chapter' => $result['finished'] ? 0 : $result['next_chapter'],
-        'log' => $log_msg,
+        'next_index' => $index + 1,
+        'log' => $result['status'] === 'ok' 
+            ? "✅ {$book->title} — {$result['loaded']}/{$result['total']}" 
+            : "❌ {$book->title} — {$result['message']}",
     ]);
 }
 
@@ -383,7 +372,7 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
             if (!confirm('Загрузить все книги со статусом new/error?')) return;
             isRunning = true;
             log('📥 Загрузка...');
-            processBooks([], 0, 0, 0);
+            processBooks([], 0, 0);
         });
         
         $('#btn-process-selected').click(function() {
@@ -392,32 +381,28 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
             if (!slugs.length) return;
             isRunning = true;
             log('📥 Загрузка выбранных (' + slugs.length + ')...');
-            processBooks(slugs, 0, 0, 0);
+            processBooks(slugs, 0, 0);
         });
         
-        function processBooks(slugs, index, processed, startChapter) {
-    var nonce = '<?php echo wp_create_nonce("abs_ifreedom_v2_nonce"); ?>';
-    $.post(ajaxurl, {
-        action: 'abs_ifreedom_v2_process',
-        slugs: slugs,
-        index: index,
-        processed: processed,
-        start_chapter: startChapter || 0,
-        _ajax_nonce: '...'
-    }, function(r) {
-        if (r.success) {
-            updateProgress(r.data.processed, r.data.total);
-            log(r.data.log);
-            if (r.data.finished) {
-                log('✅ Готово!');
-                isRunning = false;
-                setTimeout(function(){ location.reload(); }, 2000);
-            } else {
-                processBooks(slugs, r.data.next_index, r.data.processed, r.data.start_chapter);
-            }
+        function processBooks(slugs, index, processed) {
+            $.post(ajaxurl, {
+                action: 'abs_ifreedom_v2_process',
+                slugs: slugs, index: index, processed: processed,
+                _ajax_nonce: '<?php echo wp_create_nonce("abs_ifreedom_v2_nonce"); ?>'
+            }, function(r) {
+                if (r.success) {
+                    updateProgress(r.data.processed, r.data.total);
+                    log(r.data.log);
+                    if (r.data.finished) {
+                        log('✅ Готово!');
+                        isRunning = false;
+                        setTimeout(function(){ location.reload(); }, 2000);
+                    } else {
+                        processBooks(slugs, r.data.next_index, r.data.processed);
+                    }
+                }
+            }).fail(function() { log('❌ Ошибка'); isRunning = false; });
         }
-    });
-}
         
         $('#btn-clear').click(function() {
             if (!confirm('Удалить всю очередь?')) return;
