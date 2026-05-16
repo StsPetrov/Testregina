@@ -522,10 +522,7 @@ function abs_ifreedom_v2_process_book($slug, $start_chapter = 0) {
     
     abs_ifreedom_v2_log("Packet: {$book_title} — {$be}/{$total}" . ($finished ? " DONE" : ""));
     
-    if ($finished) {
-        error_log("V2 DONE: {$slug} — {$loaded}/{$total}");
-        abs_telegram_log("✅ V2: {$book_title} — {$loaded}/{$total} глав");
-    }
+    
     
     return [
         'status' => 'ok',

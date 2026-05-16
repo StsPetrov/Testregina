@@ -383,7 +383,7 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
             if (!confirm('Загрузить все книги со статусом new/error?')) return;
             isRunning = true;
             log('📥 Загрузка...');
-            processBooks([], 0, 0);
+            processBooks([], 0, 0, 0);
         });
         
         $('#btn-process-selected').click(function() {
@@ -392,28 +392,31 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
             if (!slugs.length) return;
             isRunning = true;
             log('📥 Загрузка выбранных (' + slugs.length + ')...');
-            processBooks(slugs, 0, 0);
+            processBooks(slugs, 0, 0, 0);
         });
         
-        function processBooks(slugs, index, processed) {
-            $.post(ajaxurl, {
-                action: 'abs_ifreedom_v2_process',
-                slugs: slugs, index: index, processed: processed,
-                _ajax_nonce: '<?php echo wp_create_nonce("abs_ifreedom_v2_nonce"); ?>'
-            }, function(r) {
-                if (r.success) {
-                    updateProgress(r.data.processed, r.data.total);
-                    log(r.data.log);
-                    if (r.data.finished) {
-                        log('✅ Готово!');
-                        isRunning = false;
-                        setTimeout(function(){ location.reload(); }, 2000);
-                    } else {
-                        processBooks(slugs, r.data.next_index, r.data.processed);
-                    }
-                }
-            }).fail(function() { log('❌ Ошибка'); isRunning = false; });
+        function processBooks(slugs, index, processed, startChapter) {
+    $.post(ajaxurl, {
+        action: 'abs_ifreedom_v2_process',
+        slugs: slugs,
+        index: index,
+        processed: processed,
+        start_chapter: startChapter || 0,
+        _ajax_nonce: '...'
+    }, function(r) {
+        if (r.success) {
+            updateProgress(r.data.processed, r.data.total);
+            log(r.data.log);
+            if (r.data.finished) {
+                log('✅ Готово!');
+                isRunning = false;
+                setTimeout(function(){ location.reload(); }, 2000);
+            } else {
+                processBooks(slugs, r.data.next_index, r.data.processed, r.data.start_chapter);
+            }
         }
+    });
+}
         
         $('#btn-clear').click(function() {
             if (!confirm('Удалить всю очередь?')) return;
