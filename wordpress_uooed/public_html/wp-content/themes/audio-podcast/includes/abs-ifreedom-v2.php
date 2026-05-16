@@ -427,22 +427,20 @@ function abs_ifreedom_v2_save_chapter($post_parent, $chapter_num, $chapter_title
 // ============================================================
 // 10. ЕДИНАЯ ФУНКЦИЯ ОБРАБОТКИ (AJAX + CRON)
 // ============================================================
-function abs_ifreedom_v2_process_book($slug, $start_chapter = 0) {
-    set_time_limit(300);
+function abs_ifreedom_v2_process_book($slug) {
     global $wpdb;
     $table = $wpdb->prefix . 'abs_ifreedom_v2_queue';
-    $settings = abs_ifreedom_v2_get_settings();
-    $batch_size = $settings['manual_batch_size'];
     
-    error_log("V2 START: {$slug} — batch: {$batch_size}, start: {$start_chapter}");
-    
+    // Логируем старт
     $book_info = $wpdb->get_row($wpdb->prepare("SELECT title FROM $table WHERE slug = %s", $slug));
     $book_title = $book_info ? $book_info->title : $slug;
+    abs_ifreedom_v2_log("Start: {$book_title}");
     
     $book_data = abs_ifreedom_v2_parse_book_page($slug);
     if (isset($book_data['error'])) {
-        error_log("V2 PARSE ERROR: {$slug} — {$book_data['error']}");
         $wpdb->update($table, ['status' => 'error', 'error_msg' => $book_data['error']], ['slug' => $slug]);
+        abs_telegram_log("❌ V2: {$book_title} — {$book_data['error']}");
+        abs_ifreedom_v2_log("Error: {$book_title} — {$book_data['error']}");
         return ['status' => 'error', 'message' => $book_data['error']];
     }
     
@@ -456,82 +454,75 @@ function abs_ifreedom_v2_process_book($slug, $start_chapter = 0) {
     
     $save = abs_ifreedom_v2_save_book($book_data);
     if ($save['status'] === 'error') {
-        error_log("V2 SAVE ERROR: {$slug} — {$save['message']}");
         $wpdb->update($table, ['status' => 'error', 'error_msg' => $save['message']], ['slug' => $slug]);
+        abs_ifreedom_v2_log("Error: {$book_title} — {$save['message']}");
         return $save;
     }
-    
-    error_log("V2 SAVED: {$slug} — post_id: {$save['post_id']}");
     
     $post_id = $save['post_id'];
     $loaded = 0;
     $errors = 0;
     $vip_skipped = 0;
     
-    $be = min($start_chapter + $batch_size, $total);
-    
-    for ($i = $start_chapter; $i < $be; $i++) {
-        $ch = $book_data['chapters'][$i];
+    foreach ($book_data['chapters'] as $i => $ch) {
         $num = $i + 1;
         
+        // Проверяем существующую главу
         $exists = get_posts([
             'post_type' => 'chapter', 'post_parent' => $post_id,
             'meta_key' => '_chapter_number', 'meta_value' => $num,
             'posts_per_page' => 1, 'fields' => 'ids'
         ]);
-        if (!empty($exists)) { $loaded++; continue; }
+        if (!empty($exists)) { 
+            $loaded++; 
+            continue; 
+        }
         
-        if ($i > 0 && $i % $batch_size == 0) {
+        // Пауза каждые 5 запросов
+        if ($i > 0 && $i % 5 == 0) {
             abs_ifreedom_v2_log("Progress: {$book_title} — {$loaded}/{$total}");
-            sleep(2);
-        } else {
-            usleep(rand(500000, 1500000));
+            sleep(1);
         }
         
         $cd = abs_ifreedom_v2_parse_chapter($ch['url']);
         
+        // Пропускаем платные/недоступные главы
         if (isset($cd['error'])) {
             $errors++;
-            abs_ifreedom_v2_log("Error ch.{$num}: {$cd['error']}");
-            if ($errors > 20) {
-                error_log("V2 BREAK: {$slug} — errors: {$errors}");
+            abs_ifreedom_v2_log("Skip chapter {$num}: {$cd['error']}");
+            if ($errors > 10) {
+                abs_ifreedom_v2_log("Too many errors, stopping: {$book_title}");
                 break;
             }
-            continue;
+            continue; // Пропускаем, идём дальше
         }
         
         if (empty($cd['content'])) {
             $vip_skipped++;
-            abs_ifreedom_v2_log("VIP ch.{$num}");
-            continue;
+            abs_ifreedom_v2_log("Empty chapter {$num}, likely VIP");
+            continue; // Пропускаем платную главу
         }
         
         abs_ifreedom_v2_save_chapter($post_id, $num, $cd['title'], $cd['content'], $cd['volume']);
         $loaded++;
-        $errors = 0;
+        $errors = 0; // Сбрасываем счётчик ошибок при успехе
     }
     
-    $finished = ($be >= $total);
-    
+    // Финальный статус
+    $final_status = ($loaded >= $total) ? 'done' : (($loaded > 0) ? 'new' : 'error');
     $wpdb->update($table, [
         'parsed_chapters' => $loaded,
-        'status' => $finished ? 'done' : 'parsing',
+        'status' => $final_status,
         'last_parsed_at' => current_time('mysql'),
-        'error_msg' => ($vip_skipped > 0) ? "VIP: {$vip_skipped}" : null,
+        'error_msg' => ($vip_skipped > 0) ? "Пропущено VIP: {$vip_skipped}" : null,
     ], ['slug' => $slug]);
     
-    abs_ifreedom_v2_log("Packet: {$book_title} — {$be}/{$total}" . ($finished ? " DONE" : ""));
+    $msg = "✅ V2: {$book_title} — {$loaded}/{$total} глав";
+    if ($vip_skipped > 0) $msg .= " (VIP: {$vip_skipped})";
+    abs_telegram_log($msg);
+    abs_ifreedom_v2_log("Done: {$book_title} — {$loaded}/{$total}");
     
-    
-    
-    return [
-        'status' => 'ok',
-        'loaded' => $loaded,
-        'total' => $total,
-        'finished' => $finished,
-        'next_chapter' => $be,
-        'vip_skipped' => $vip_skipped,
-    ];
+    return ['status' => 'ok', 'loaded' => $loaded, 'total' => $total, 'vip_skipped' => $vip_skipped];
 }
 
 // ============================================================
