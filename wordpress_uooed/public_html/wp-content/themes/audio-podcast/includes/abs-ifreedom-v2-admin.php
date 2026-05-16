@@ -69,6 +69,7 @@ function abs_ifreedom_v2_scan_ajax() {
 
 add_action('wp_ajax_abs_ifreedom_v2_process', 'abs_ifreedom_v2_process_ajax');
 function abs_ifreedom_v2_process_ajax() {
+    set_time_limit(300);
     check_ajax_referer('abs_ifreedom_v2_nonce');
     if (!current_user_can('manage_options')) wp_send_json_error();
     
@@ -100,6 +101,7 @@ function abs_ifreedom_v2_process_ajax() {
         $processed++;
         abs_telegram_log("📥 V2: {$book->title} — {$result['loaded']}/{$result['total']} глав");
     }
+    
     
     wp_send_json_success([
         'finished' => ($index + 1 >= $total),

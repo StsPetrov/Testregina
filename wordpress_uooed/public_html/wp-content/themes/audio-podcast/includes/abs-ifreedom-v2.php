@@ -428,7 +428,10 @@ function abs_ifreedom_v2_save_chapter($post_parent, $chapter_num, $chapter_title
 // 10. ЕДИНАЯ ФУНКЦИЯ ОБРАБОТКИ (AJAX + CRON)
 // ============================================================
 function abs_ifreedom_v2_process_book($slug) {
+    set_time_limit(300); // 5 минут на книгу
     global $wpdb;
+    $settings = abs_ifreedom_v2_get_settings();
+    $batch_size = $settings['manual_batch_size'];
     $table = $wpdb->prefix . 'abs_ifreedom_v2_queue';
     
     // Логируем старт
@@ -488,14 +491,14 @@ function abs_ifreedom_v2_process_book($slug) {
         
         // Пропускаем платные/недоступные главы
         if (isset($cd['error'])) {
-            $errors++;
-            abs_ifreedom_v2_log("Skip chapter {$num}: {$cd['error']}");
-            if ($errors > 10) {
-                abs_ifreedom_v2_log("Too many errors, stopping: {$book_title}");
-                break;
-            }
-            continue; // Пропускаем, идём дальше
-        }
+    $errors++;
+    abs_ifreedom_v2_log("Error ch.{$num}: {$cd['error']}");
+    if ($errors > 20) {
+        abs_ifreedom_v2_log("Too many errors, stopping: {$book_title}");
+        break;
+    }
+    continue;
+}
         
         if (empty($cd['content'])) {
             $vip_skipped++;
@@ -505,6 +508,10 @@ function abs_ifreedom_v2_process_book($slug) {
         
         abs_ifreedom_v2_save_chapter($post_id, $num, $cd['title'], $cd['content'], $cd['volume']);
         $loaded++;
+        $batch_size = abs_ifreedom_v2_get_settings()['manual_batch_size'];
+if ($loaded > 0 && $loaded % $batch_size == 0) {
+    abs_ifreedom_v2_log("Progress: {$book_title} — {$loaded}/{$total}");
+}
         $errors = 0; // Сбрасываем счётчик ошибок при успехе
     }
     
