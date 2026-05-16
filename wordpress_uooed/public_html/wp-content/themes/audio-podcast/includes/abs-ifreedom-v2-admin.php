@@ -348,3 +348,105 @@ function abs_parser_ifreedom_admin_page() {
     </script>
     <?php
 }
+
+// ========== AJAX ОБРАБОТЧИКИ ==========
+
+add_action('wp_ajax_abs_ifreedom_v2_save_settings', 'abs_ifreedom_v2_save_settings');
+function abs_ifreedom_v2_save_settings() {
+    check_ajax_referer('abs_ifreedom_v2_nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error();
+    $settings = abs_ifreedom_v2_get_settings();
+    $fields = ['min_delay_ms', 'max_delay_ms', 'max_per_minute', 'cron_batch_size', 'manual_batch_size', 'http_timeout'];
+    foreach ($fields as $f) {
+        if (isset($_POST[$f])) $settings[$f] = absint($_POST[$f]);
+    }
+    update_option('abs_ifreedom_v2_settings', $settings);
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_abs_ifreedom_v2_scan', 'abs_ifreedom_v2_scan_ajax');
+function abs_ifreedom_v2_scan_ajax() {
+    check_ajax_referer('abs_ifreedom_v2_nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error();
+    
+    $page = (int)($_POST['page'] ?? 1);
+    $last_page = (int)($_POST['last_page'] ?? 0);
+    $total = (int)($_POST['total'] ?? 0);
+    $errors = (int)($_POST['errors'] ?? 0);
+    
+    if ($last_page == 0) $last_page = abs_ifreedom_v2_get_last_catalog_page();
+    
+    $books = abs_ifreedom_v2_scan_catalog_page($page);
+    if (is_array($books) && isset($books['error'])) {
+        $errors++;
+    } else {
+        foreach ($books as $b) {
+            $result = abs_ifreedom_v2_queue_book($b);
+            if ($result['status'] === 'queued') $total++;
+        }
+    }
+    
+    wp_send_json_success([
+        'finished' => ($page >= $last_page),
+        'page' => $page + 1,
+        'last_page' => $last_page,
+        'total' => $total,
+        'errors' => $errors,
+        'message' => "Страница $page/$last_page, книг: $total",
+    ]);
+}
+
+add_action('wp_ajax_abs_ifreedom_v2_process', 'abs_ifreedom_v2_process_ajax');
+function abs_ifreedom_v2_process_ajax() {
+    check_ajax_referer('abs_ifreedom_v2_nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error();
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'abs_ifreedom_v2_queue';
+    $slugs = isset($_POST['slugs']) ? array_filter((array)$_POST['slugs']) : [];
+    $index = (int)($_POST['index'] ?? 0);
+    $processed = (int)($_POST['processed'] ?? 0);
+    $start_chapter = (int)($_POST['start_chapter'] ?? 0);
+    
+    if (empty($slugs)) {
+        $queue = $wpdb->get_col("SELECT slug FROM $table WHERE status IN('new','error') ORDER BY id ASC");
+    } else {
+        $queue = $slugs;
+    }
+    
+    $total = count($queue);
+    if ($index >= $total) {
+        wp_send_json_success(['finished' => true, 'processed' => $processed, 'total' => $total]);
+    }
+    
+    $slug = $queue[$index];
+    $result = abs_ifreedom_v2_process_book($slug, $start_chapter);
+    $book_title = $wpdb->get_var($wpdb->prepare("SELECT title FROM $table WHERE slug = %s", $slug));
+    
+    if ($result['status'] === 'ok' && $result['finished']) {
+        $processed++;
+        $index++;
+    }
+    
+    $log_msg = $result['finished'] 
+        ? "✅ {$book_title} — {$result['loaded']}/{$result['total']}" 
+        : "📖 {$book_title} — {$result['next_chapter']}/{$result['total']}";
+    
+    wp_send_json_success([
+        'finished' => ($index >= $total),
+        'processed' => $processed,
+        'total' => $total,
+        'next_index' => $index,
+        'start_chapter' => $result['finished'] ? 0 : $result['next_chapter'],
+        'log' => $log_msg,
+    ]);
+}
+
+add_action('wp_ajax_abs_ifreedom_v2_clear', 'abs_ifreedom_v2_clear_ajax');
+function abs_ifreedom_v2_clear_ajax() {
+    check_ajax_referer('abs_ifreedom_v2_nonce');
+    if (!current_user_can('manage_options')) wp_send_json_error();
+    global $wpdb;
+    $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}abs_ifreedom_v2_queue");
+    wp_send_json_success();
+}
