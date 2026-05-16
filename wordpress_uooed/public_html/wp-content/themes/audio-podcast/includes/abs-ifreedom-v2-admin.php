@@ -98,7 +98,9 @@ function abs_ifreedom_v2_process_ajax() {
     
     if ($result['status'] === 'ok') {
         $processed++;
-        abs_telegram_log("📥 V2: {$book->title} — {$result['loaded']}/{$result['total']} глав");
+        if (function_exists('abs_telegram_log')) {
+    abs_telegram_log("📥 V2: {$book->title} — {$result['loaded']}/{$result['total']} глав");
+}
     }
     
     wp_send_json_success([
@@ -392,7 +394,7 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
             }, function(r) {
                 if (r.success) {
                     updateProgress(r.data.processed, r.data.total);
-                    log(r.data.log);
+                    log(r.data.message || r.data.log || 'Готово');
                     if (r.data.finished) {
                         log('✅ Готово!');
                         isRunning = false;
