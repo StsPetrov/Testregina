@@ -7,7 +7,11 @@
  */
 
 if (!defined('ABSPATH')) exit;
-
+if (!function_exists('abs_telegram_log')) {
+    function abs_telegram_log($message) {
+        // Заглушка, если функция не определена
+    }
+}
 // ============================================================
 // 1. ТАБЛИЦА ОЧЕРЕДИ
 // ============================================================
@@ -482,9 +486,11 @@ function abs_ifreedom_v2_process_book($slug) {
         }
         
         // Пауза каждые 5 запросов
-        if ($i > 0 && $i % 5 == 0) {
+        if ($i > 0 && $i % $batch_size == 0) {
             abs_ifreedom_v2_log("Progress: {$book_title} — {$loaded}/{$total}");
-            sleep(1);
+            sleep(2);
+        } else {
+            usleep(rand(500000, 1500000));
         }
         
         $cd = abs_ifreedom_v2_parse_chapter($ch['url']);
