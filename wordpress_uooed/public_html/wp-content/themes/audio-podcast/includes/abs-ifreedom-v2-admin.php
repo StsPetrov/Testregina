@@ -69,6 +69,7 @@ function abs_ifreedom_v2_scan_ajax() {
 
 add_action('wp_ajax_abs_ifreedom_v2_process', 'abs_ifreedom_v2_process_ajax');
 function abs_ifreedom_v2_process_ajax() {
+    ini_set('memory_limit', '256M');
     set_time_limit(300);
     check_ajax_referer('abs_ifreedom_v2_nonce');
     if (!current_user_can('manage_options')) wp_send_json_error();
@@ -93,23 +94,31 @@ function abs_ifreedom_v2_process_ajax() {
     }
     
     $slug = $queue[$index];
+    $start_chapter = (int)($_POST['start_chapter'] ?? 0);
+    
+    $result = abs_ifreedom_v2_process_book($slug, $start_chapter);
     $book = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE slug = %s", $slug));
     
-    $result = abs_ifreedom_v2_process_book($slug);
+    $book_title = $wpdb->get_var($wpdb->prepare("SELECT title FROM $table WHERE slug = %s", $slug));
     
-    if ($result['status'] === 'ok') {
+    if ($result['status'] === 'ok' && $result['finished']) {
         $processed++;
-        abs_telegram_log("📥 V2: {$book->title} — {$result['loaded']}/{$result['total']} глав");
+        $index++;
+        if (function_exists('abs_telegram_log')) {
+            abs_telegram_log("📥 V2: {$book_title} — {$result['loaded']}/{$result['total']} глав");
+        }
     }
     
+    $log_msg = $result['finished'] 
+        ? "✅ {$book_title} — {$result['loaded']}/{$result['total']}" 
+        : "📖 {$book_title} — {$result['next_chapter']}/{$result['total']}";
     
     wp_send_json_success([
-        'finished' => ($index + 1 >= $total),
+        'finished' => ($index >= $total),
         'processed' => $processed, 'total' => $total,
-        'next_index' => $index + 1,
-        'log' => $result['status'] === 'ok' 
-            ? "✅ {$book->title} — {$result['loaded']}/{$result['total']}" 
-            : "❌ {$book->title} — {$result['message']}",
+        'next_index' => $index,
+        'start_chapter' => $result['finished'] ? 0 : $result['next_chapter'],
+        'log' => $log_msg,
     ]);
 }
 
