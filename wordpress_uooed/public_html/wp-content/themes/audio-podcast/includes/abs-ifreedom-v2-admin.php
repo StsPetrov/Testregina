@@ -147,6 +147,7 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
     
     $total = $wpdb->get_var("SELECT COUNT(*) FROM $table");
     $new = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE status='new'");
+    $parsing = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE status='parsing'");
     $done = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE status='done'");
     $error = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE status='error'");
     
@@ -169,6 +170,9 @@ case 'views_asc': $order_by = "ORDER BY views ASC"; break;
     <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
         <span style="font-size:2rem;font-weight:700;color:#007cba;"><?php echo $new; ?></span><br>Новых
     </div>
+    <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
+    <span style="font-size:2rem;font-weight:700;color:#f0a030;"><?php echo $parsing; ?></span><br>В процессе
+</div>
     <div class="stat-box" style="flex:1;text-align:center;padding:20px;background:#fff;border-radius:8px;border:1px solid #ccd0d4;">
         <span style="font-size:2rem;font-weight:700;color:#00a32a;"><?php echo $done; ?></span><br>Готово
     </div>
