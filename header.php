@@ -1,0 +1,72 @@
+<?php
+
+
+
+
+
+
+
+/**
+ * The Header for our theme.
+ *
+ * Displays all of the <head> section and everything up till <div id="content-vw">
+ *
+ * @package Audio Podcast
+ */
+
+?><!DOCTYPE html>
+
+<html <?php language_attributes(); ?>>
+
+	<head>
+	  	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	  	<meta name="viewport" content="width=device-width">
+	  	<link rel="manifest" href="/manifest.json">
+<script>
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('/sw.js'); 
+}
+</script>
+
+<?php wp_head(); ?>
+	</head>
+
+	<body <?php body_class(); ?>>
+	<?php if ( function_exists( 'wp_body_open' ) )
+		{
+	    	wp_body_open();
+	  	}else{
+	    	do_action('wp_body_open');
+	  	}
+	?>
+
+	<header role="banner">
+		<a class="screen-reader-text skip-link" href="#maincontent" ><?php esc_html_e( 'Skip to content', 'audio-podcast' ); ?><span class="screen-reader-text"><?php esc_html_e( 'Skip to content', 'audio-podcast' ); ?></span></a>
+		<div class="home-page-header position-relative">
+			<?php get_template_part('template-parts/header/top-header'); ?>
+			<?php get_template_part('template-parts/header/middle-header'); ?>
+		</div>
+	</header>
+
+	<?php if(get_theme_mod('audio_podcast_loader_enable',false)|| get_theme_mod('audio_podcast_responsive_preloader_hide',false)) { ?>
+	  	<div id="preloader">
+		    <div class="loader-inner">
+		      <div class="loader-line-wrap">
+		        <div class="loader-line"></div>
+		      </div>
+		      <div class="loader-line-wrap">
+		        <div class="loader-line"></div>
+		      </div>
+		      <div class="loader-line-wrap">
+		        <div class="loader-line"></div>
+		      </div>
+		      <div class="loader-line-wrap">
+		        <div class="loader-line"></div>
+		      </div>
+		      <div class="loader-line-wrap">
+		        <div class="loader-line"></div>
+		      </div>
+		    </div>
+	  	</div>
+	<?php } ?>
